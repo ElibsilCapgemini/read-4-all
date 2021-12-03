@@ -50,10 +50,11 @@
         var mes = now.getMonth() + 1; //Separei o mes em uma outra variável para somar mais 1, pois por padrão o getMounth começa do mês 0 
         var unicoID = now.getDate() + '' + mes + '' + now.getFullYear() + now.getHours() + now.getMinutes() + now.getSeconds() + now.getMilliseconds();
         var fileName = file.name;
-        var nomeFinal = fileName.split(".", [1]) + '_' + unicoID + '.mp3';
+        var nomeFinalTxt = fileName.split(".txt", 1) + '_' + unicoID + '.txt';
+        var nomeFinalMp3 = fileName.split(".txt", 1) + '_' + unicoID + '.mp3';
         var FolderfilesKey = encodeURIComponent(FolderName) + "/";
         var principal = document.getElementById("principal");
-        var fileKey = FolderfilesKey + nomeFinal; //diretório + arquivo
+        var fileKey = FolderfilesKey + nomeFinalTxt; //diretório + arquivo
 
         // Use S3 ManagedUpload class as it supports multipart uploads
         var upload = new AWS.S3.ManagedUpload({
@@ -71,7 +72,7 @@
             //Obtendo link de download
             var presignedGETURL = s3.getSignedUrl('getObject', {
               Bucket: 'final-result-tcc/folder-tcc',
-              Key: nomeFinal, //filename
+              Key: nomeFinalTxt, //filename
               Expires: 100 //time to expire in seconds
             });
 
@@ -82,7 +83,8 @@
 
             var myVar = setInterval(comparaArquivo, 5000);
 
-            alert("Aguarde enquanto convertemos seu arquivo.");
+            //alert("Aguarde enquanto convertemos seu arquivo.");
+            alert("nomeFinalTxt: " + nomeFinalTxt + "      " + "nomeFinalMp3:" + nomeFinalMp3);
 
             function comparaArquivo(){
               //Listar bucket
@@ -98,9 +100,9 @@
                 var existe = false;
                 for (var i=0; i < data.Contents.length; i++){             
                   console.log(data.Contents[i].Key);    
-                  console.log('folder-tcc/' + nomeFinal);
+                  console.log('folder-tcc/' + nomeFinalMp3);
                   console.log(existe);    
-                  if (data.Contents[i].Key == 'folder-tcc/' + nomeFinal){
+                  if (data.Contents[i].Key == 'folder-tcc/' + nomeFinalMp3){
                     existe = true;
                     abrirLinkDownload();
                   }
