@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <title>Home - Read 4 all</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="index.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="reset.css">
+
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.971.0.min.js"></script>
+
+    <!--Conexão com AWS-->
+    <script>
+      var FolderBucketName = "input-audio-tcc";
+      var bucketRegion = "us-east-1";
+      var IdentityPoolId = "us-east-1:6e85c8ff-da56-4460-87c4-0814ff76db8c";
+
+      // CONFIGURANDO SDK
+      AWS.config.update({
+        region: bucketRegion,
+        credentials: new AWS.CognitoIdentityCredentials({
+          IdentityPoolId: IdentityPoolId
+        })
+      });
+
+      var s3 = new AWS.S3({
+        apiVersion: "2006-03-01",
+        params: { Bucket: FolderBucketName }
+      });
+
+      function getHtml(template) {
+         return template.join('\n');
+      }
+      viewFolder();
+   </script>
+  </head>
+
+  <main>
+    <!--Função para upload de arquivo arquivo no AWS-->
+    <script>
+      function addfile(FolderName) {
+        var files = document.getElementById("fileupload").files;
+        if (!files.length) {
+          return alert("Por favor, selecione um arquivo");
+        }
+
+        var file = files[0]; //Nome original do arquivo
+        var now = new Date();
+        var mes = now.getMonth() + 1; //Separei o mes em uma outra variável para somar mais 1, pois por padrão o getMounth começa do mês 0 
+        var unicoID = now.getDate() + '' + mes + '' + now.getFullYear() + now.getHours() + now.getMinutes() + now.getSeconds() + now.getMilliseconds();
+        var fileName = file.name;
+        var nomeFinal = fileName.split(".", [1]) + '_' + unicoID + '.mp3';
+        var FolderfilesKey = encodeURIComponent(FolderName) + "/";
+        var principal = document.getElementById("principal");
+        var fileKey = FolderfilesKey + nomeFinal; //diretório + arquivo
+
+        // Use S3 ManagedUpload class as it supports multipart uploads
+        var upload = new AWS.S3.ManagedUpload({
+          params: {
+            Bucket: FolderBucketName,
+            Key: fileKey,
+            Body: file
+          }
+        });
+
+        var promise = upload.promise();
+
+        promise.then(
+          function(data) { 
+            //Obtendo link de download
+            var presignedGETURL = s3.getSignedUrl('getObject', {
+              Bucket: 'final-result-tcc/folder-tcc',
+              Key: nomeFinal, //filename
+              Expires: 100 //time to expire in seconds
+            });
+
+            function abrirLinkDownload (){
+              window.open(presignedGETURL);
+              stopComparacao()
+              }
+
+            var myVar = setInterval(comparaArquivo, 5000);
+
+            alert("Aguarde enquanto convertemos seu arquivo.");
+
+            function comparaArquivo(){
+              //Listar bucket
+              var params = { 
+                Bucket: 'final-result-tcc',
+                Prefix: 'folder-tcc'
+              }
+              s3.listObjects(params, function (err, data) {
+                if(err)throw err;
+                var listar = (data.Contents[3].Key);
+                
+                //Comparando nome arquivo enviado com o arquivo dentro do bucket
+                var existe = false;
+                for (var i=0; i < data.Contents.length; i++){             
+                  console.log(data.Contents[i].Key);    
+                  console.log('folder-tcc/' + nomeFinal);
+                  console.log(existe);    
+                  if (data.Contents[i].Key == 'folder-tcc/' + nomeFinal){
+                    existe = true;
+                    abrirLinkDownload();
+                  }
+                }
+              });
+            }
+
+            function stopComparacao(){
+              clearInterval(myVar);
+            }
+
+          },
+
+          //Caso o usuário não selecione nenhum arquivo
+          function(err) {
+            return alert("Houve um erro com o upload do seu arquivo. Tente novamente. ", err.message, fileKey);
+          }
+        );
+      }
+
+      //Função para visualizar pasta
+      function viewFolder(FolderName) {
+        var FolderfilesKey = encodeURIComponent(FolderName) + "/";
+        s3.listObjects({ Prefix: FolderfilesKey }, function(err, data) {
+          if (err) {
+            return alert("There was an error viewing your Folder: " + err.message);
+          }
+          // 'this' references the AWS.Response instance that represents the response
+          var href = this.request.httpRequest.endpoint.href;
+          var bucketUrl = href + FolderBucketName + "/";
+
+          var files = data.Contents.map(function(file) {
+            var fileKey = file.Key;
+            var fileUrl = bucketUrl + encodeURIComponent(fileKey);
+          });
+        });
+      } 
+    </script>
+
+    <!-- Barra de navegação de acessibilidade -->
+    <nav>
+      <!--Botões para aumentar e diminuir as letras-->
+      <div>
+        <button name="aumentar-fonte" id="aumentar-fonte" title="Aumentar fonte">A+</button>
+      </div>
+      <div>
+        <button name="diminuir-fonte" id="diminuir-fonte" title="Diminuir fonte">A -</button>
+      </div>
+
+      <!--Botão de alto contraste-->
+      <div>
+        <button nome="contraste" id="contraste" title="Auto contraste">Alto-contraste</button> 
+      </div>
+    </nav>
+
+    <!-- Função para trocar o estilo da página -->
+    <script>
+      const btnCont = document.getElementById("contraste");
+      const lnk = document.querySelector("link[href='index.css']");
+      const stlcss = new URL("./index.css", window.location)
+
+      btnCont.addEventListener("click", function () {
+      if (lnk.href == stlcss.href){
+          lnk.href = "indexAltoCont.css"; 
+      } else {
+          lnk.href = "index.css";
+      }
+      });
+    </script>
+
+    <!-- Função para aumentar e diminuir os botões da página -->
+    <script>
+      window.onload = function() {
+        var elementButton = document.querySelector('*');
+        var elementBtnIncreaseFont = document.getElementById('aumentar-fonte');
+        var elementBtnDecreaseFont = document.getElementById('diminuir-fonte');
+
+        // Padrão de tamanho, equivale a 100% do valor definido no Body
+        var fontSize = 100;
+
+        // Valor de incremento ou decremento, equivale a 10% do valor do Body
+        var increaseDecrease = 10;
+
+        // Evento de click para aumentar a fonte
+        elementBtnIncreaseFont.addEventListener('click', function(event) {
+            fontSize = fontSize + increaseDecrease;
+            elementButton.style.fontSize = fontSize + '%';
+        });
+
+        // Evento de click para diminuir a fonte
+        elementBtnDecreaseFont.addEventListener('click', function(event) {
+            fontSize = fontSize - increaseDecrease;
+            elementButton.style.fontSize = fontSize + '%';
+        });
+      }
+    </script>
+
+    <!-- Logo do site -->
+    <header>
+        <img class="logo" src="logo.png" alt="imagem não disponível." >
+    </header>
+
+    <!--Input de upload -->
+    <main id="principal">
+      <div id="btnupload">
+        <input id="fileupload" type="file" accept=".pdf, .txt">
+        <button id="addfile" onclick = "addfile('folder-tcc')"> Enviar arquivo </button>
+      </div>
+    </main>
+    
+    <!--Pontos de loading-->
+    <div id="load" hidden>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+
+  </body>
+</html> 

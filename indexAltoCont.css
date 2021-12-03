@@ -1,0 +1,137 @@
+/*Cor do fundo da seleção de texto*/
+
+* ::selection {
+    background-color: aqua;
+}
+
+/*Corpo do site*/
+
+body {
+    background-color: #000000;
+}
+
+header{
+    padding: .5rem;
+}
+
+/*Barra de acessibilidade*/
+
+nav {
+    text-align: right;
+}
+
+header{
+    padding: .5rem;
+}
+
+nav div {
+    display: inline-block;
+    margin: .25rem;
+    cursor: pointer;
+}
+
+#contraste {
+    cursor: pointer;
+    display: inline-block;
+    font-size: 1rem;
+    color: yellow;
+    background-color: black; 
+    border: .125rem solid yellow;
+    border-radius: .5rem;
+    padding: 1rem 2rem; 
+}
+
+#aumentar-fonte{
+    cursor: pointer;
+    background-color: black;
+    font-size: 1rem;
+    color: yellow;
+    border: .125rem solid yellow;
+    border-radius: 50%;
+    padding: .5rem;
+}
+
+#diminuir-fonte{
+    cursor: pointer;
+    background-color: black;
+    font-size: 1rem;
+    color: yellow;
+    border: .125rem solid yellow;
+    border-radius: 50%;
+    padding: .5rem;
+}
+
+.logo {
+    height: auto;
+    width: auto;
+    max-width: 30rem;
+    display: block;
+    margin: auto;
+}
+
+/*Botão de upload*/
+
+main {
+    text-align: center;
+}
+
+#btnupload {
+    display: inline-block;
+    background-color: black; 
+    border: .125rem solid yellow;
+    border-radius: .5rem;
+    padding: .5rem 1rem; 
+}
+
+input#file-upload-button{
+    background-color: aqua;
+}
+
+#fileupload {
+    font-size: 1rem;
+    color: white;
+    padding: .5rem;
+}
+
+#addfile {
+    cursor: pointer;
+    background-color: black;
+    font-size: 1rem;
+    color: yellow;
+    border: .125rem solid yellow;
+    border-radius: .5rem;
+    padding: .5rem;
+}
+
+
+/*Loading*/
+.dot:nth-child(2) { animation-delay: 0.1s; }
+.dot:nth-child(3) { animation-delay: 0.5s; }
+.dot:nth-child(4) { animation-delay: 10s; }
+.dot:nth-child(5) { animation-delay: 1.5s; }
+.dot:nth-child(6) { animation-delay: 2s; }
+@keyframes animacao {
+    0%, 100%{
+        transform: scale(0.2);
+    }
+    50%{
+        transform: scale(1);
+    }
+}
+
+#load {
+    text-align: center;
+}
+
+#load .dot {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    margin: 0.625rem;
+    display: inline-block;
+    background-color: yellow;
+    transform: scale(0.2);
+    animation: animacao 1.2s infinite;
+}
+
+/*Fim Loading*/
